@@ -54,7 +54,7 @@ const wtimeout =   1500;
         }
       }
     }
-    for(i = 0 ; i <= 50 ; i++){
+    for(i = 0 ; i <= 60 ; i++){
       console.log('');
     }
     console.log('メルアド　　：' + standfm_id.slice(0,5)+'**********');
@@ -87,7 +87,7 @@ const wtimeout =   1500;
           break L1; 
       }
       console.log('')
-      console.log('Start::::standfm_login  standfm_login')
+      console.log('Start::::　standfm_login')
       resArr = await standfm_login(headlessMode,standfm_id,standfm_pass);
       if(resArr != -1){
           console.log('standfm_login = OK!')    
@@ -118,18 +118,18 @@ const wtimeout =   1500;
       }
       if(j != 0){
         console.log('')
-        console.log('Start::::露骨な表現の修正  露骨な表現の修正')
+        console.log('Start::::　露骨な表現の修正')
       }
       res_edit_rokotsu = await edit_rokotsu(headlessMode,j,resArr,category);
       if(res_edit_rokotsu == 0){
-        console.log('===============================================')
+        console.log('==================================')
         console.log('露骨な表現の修正 = 成功！')  
-        console.log('===============================================')
+        console.log('==================================')
         console.log('')
       }else{
-        console.log('===============================================')
-        console.log('露骨な表現の修正 = 失敗　手動で修正してください！')  
-        console.log('===============================================')
+        console.log('==================================')
+        console.log('露骨な表現の修正失敗！　手動で修正が必要！')  
+        console.log('==================================')
         console.log('')
       }
       if(editend == j){
@@ -186,10 +186,11 @@ async function edit_rokotsu(headlessMode,j,resArr,category){
 
   noedit = archivename.indexOf('#NoEDIT');
   if(noedit != -1){
-    await write_log('[OK] #NoEDITのため修正なし アーカイブ順[' + standfm_listNo + '] 露骨な表現修正なし[' + archivename + '] ユーザー名[' + username + ']' , seikou);
+    await write_log('[OK]　#NoEDIT[' + standfm_listNo + '] 露骨な表現修正なし[' + archivename + '] ユーザー名[' + username + ']' , seikou);
     console.log('#NoEDITあり! 露骨な表現を修正しませんでした。');
     console.log('アーカイブ順[' + standfm_listNo + ']');
-    console.log('修正しなかったアーカイブ['+ archivename + ']');
+    console.log('修正しなかったアーカイブ');
+    console.log('['+ archivename + ']');
     return 0;
   }
 
@@ -253,8 +254,9 @@ async function edit_rokotsu(headlessMode,j,resArr,category){
     await page2.waitForTimeout(wtimeout);
   }else{
     seikou = 0;
-    await write_log('[OK] 修正不要 アーカイブ順[' + standfm_listNo + '] 露骨な表現を含まない[' + archivename + '] ユーザー名[' + username + ']' , seikou);
-    console.log('[OK] 修正不要！露骨な表現を含まない['+ archivename + ']');
+    await write_log('[OK][' + standfm_listNo + '] 修正不要[' + archivename + '] ユーザー名[' + username + ']' , seikou);
+    console.log('[OK] 修正不要！露骨な表現を含まない');
+    console.log('[OK] ['+ archivename + ']');
     console.log('[OK] アーカイブ順[' + standfm_listNo + ']');
     return 0;
   } 
@@ -272,18 +274,20 @@ async function edit_rokotsu(headlessMode,j,resArr,category){
     await page2.waitForTimeout(wtimeout+1)
 
     seikou = 0;
-    await write_log('[OK] 修正済み アーカイブ順[' + standfm_listNo + '] 露骨な表現を含まないに修正済み[' + archivename + '] ユーザー名[' + username + ']' , seikou);
-    console.log('[OK] 露骨な表現を含まないに修正済み['+ archivename + ']');
+    await write_log('[OK][' + standfm_listNo + '] 露骨な表現を含まないに修正済み[' + archivename + '] ユーザー名[' + username + ']' , seikou);
+    console.log('[OK] 露骨な表現を含まないに修正済み');
+    console.log('[OK] ['+ archivename + ']');
     console.log('[OK] アーカイブ順[' + standfm_listNo + ']');
 
     return 0;
 
   } catch(e) {
     seikou = -1;
-    await write_log('[NG] 修正失敗 アーカイブ順[' + standfm_listNo + '] 露骨な表現を含まないに修正を失敗したアーカイブ名[' + archivename + '] ユーザー名[' + username + ']' , seikou);
+    await write_log('[NG][' + standfm_listNo + '] 露骨な表現を含まないに修正を失敗したアーカイブ名[' + archivename + '] ユーザー名[' + username + ']' , seikou);
     console.log('失敗! 露骨な表現を修正できませんでした');
     console.log('[NG] アーカイブ順[' + standfm_listNo + ']');
-    console.log('[NG] 露骨な表現を修正できなかったアーカイブ['+ archivename + ']');
+    console.log('[NG] 露骨な表現を修正できなかった');
+    console.log('['+ archivename + ']');
     return -1;
   }  
 }
