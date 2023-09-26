@@ -1,7 +1,6 @@
 #!/bin/bash
 echo [google shell]---
 cd
-echo \$HOME\/inst.sh >> .bashrc
 mkdir logfile
 mkdir .cloudshell
 cd .cloudshell
