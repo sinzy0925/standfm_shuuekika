@@ -54,7 +54,7 @@ const wtimeout =   1500;
         }
       }
     }
-    for(i = 0 ; i <= 20 ; i++){
+    for(i = 0 ; i <= 50 ; i++){
       console.log('');
     }
     console.log('メルアド　　：' + standfm_id.slice(0,5)+'**********');
