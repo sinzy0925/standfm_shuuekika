@@ -1,7 +1,7 @@
 const headlessMode = true;//false 画面あり　true 画面なし
 
 const { chromium } = require('playwright');
-const wtimeout =   1500;
+const wtimeout =   200;
 
 //const readline = require('readline/promises');
 
@@ -108,6 +108,8 @@ const wtimeout =   1500;
 
 
     let res_edit_rokotsu = '';
+    let startTime = performance.now(); // 開始時間
+    let endTime = performance.now(); // 終了時間
     for(let j = editstart ; j <= editend ; j++){
       if(reslogin == -1){
           break;
@@ -120,22 +122,29 @@ const wtimeout =   1500;
         console.log('')
         console.log('Start::::　露骨な表現の修正')
       }
+      startTime = performance.now(); // 開始時間
       res_edit_rokotsu = await edit_rokotsu(headlessMode,j,resArr,category);
+      endTime = performance.now(); // 終了時間
       if(res_edit_rokotsu == 0){
         console.log('==================================')
         console.log('露骨な表現の修正 = 成功！')  
+        console.log('処理時間 : ' + ((endTime - startTime)/1000).toFixed(1) + ' 秒'); // 何ミリ秒かかったかを表示する
         console.log('==================================')
-        console.log('')
       }else{
         console.log('==================================')
         console.log('露骨な表現の修正失敗！　手動で修正が必要！')  
+        console.log('処理時間 : ' + ((endTime - startTime)/1000).toFixed(1) + ' 秒'); // 何ミリ秒かかったかを表示する
         console.log('==================================')
-        console.log('')
+        await page2.close();  
+        await context.close();
+        await browser.close();
+        break;
       }
       if(editend == j){
         await page2.close();  
         await context.close();
         await browser.close();
+        break;
       }
     }
   }
@@ -171,12 +180,20 @@ async function edit_rokotsu(headlessMode,j,resArr,category){
   await page2.waitForTimeout(wtimeout);
 
   await page2.getByRole('heading', { name: '放送リスト' }).click();
+  await page2.locator('body').press('PageDown');
+  await page2.locator('body').press('PageDown');
   for(let i = 1 ; i < parseInt(standfm_listNo, 10) ; i++){
     await page2.locator('body').press('ArrowDown');
     await page2.locator('body').press('ArrowDown');
     await page2.locator('body').press('ArrowDown');
     await page2.locator('body').press('ArrowDown');
-    await page2.waitForTimeout(600);
+    await page2.locator('body').press('ArrowDown');
+    
+    if(i % 3 == 0){
+      //await page2.locator('body').press('PageDown');
+      await page2.waitForTimeout(350);
+    }
+    
 
   }
   await page2.waitForTimeout(wtimeout);
@@ -186,11 +203,10 @@ async function edit_rokotsu(headlessMode,j,resArr,category){
 
   noedit = archivename.indexOf('#NoEDIT');
   if(noedit != -1){
-    await write_log('[OK]　#NoEDIT[' + standfm_listNo + '] 露骨な表現修正なし[' + archivename + '] ユーザー名[' + username + ']' , seikou);
-    console.log('#NoEDITあり! 露骨な表現を修正しませんでした。');
-    console.log('アーカイブ順[' + standfm_listNo + ']');
-    console.log('修正しなかったアーカイブ');
-    console.log('['+ archivename + ']');
+    await write_log('[OK] #NoEDIT[' + standfm_listNo + '] 露骨な表現修正なし[' + archivename + '] ユーザー名[' + username + ']' , seikou);
+    console.log('[OK] #NoEDITあり! 修正不要！露骨な表現');
+    console.log('[OK] ['+ archivename + ']');
+    console.log('[OK] アーカイブ順[' + standfm_listNo + ']');
     return 0;
   }
 
@@ -220,11 +236,21 @@ async function edit_rokotsu(headlessMode,j,resArr,category){
   if(category1 == '選択してください'){
     //console.log('カテゴリ ： 選択してください')
     await page2.locator('.css-1v8asev-control > .css-1wy0on6').first().click();
-    await page2.locator('#react-select-4-option-' + String(category-1)).click();
+    await page2.waitForTimeout(wtimeout);
+    for(i = 1 ; i < category ; i++ ){
+      if(category == 1){
+        break;
+      }
+      await page2.locator('body').press('ArrowDown');
+    }
+    await page2.locator('body').press('Enter');
+    category1 = await page2.locator(xpathh).nth(0).innerText()
+    console.log('     修正済みカテゴリ[' + category1 +']')
+      //await page2.locator('#react-select-4-option-' + String(category-1)).click();
   }else{
-    //console.log('カテゴリ ： ' + category1)
+    category1 = await page2.locator(xpathh).nth(0).innerText()
+    console.log('     修正不要カテゴリ[' + category1 +']')
   }
-
 
 
   //露骨な表現
@@ -242,7 +268,10 @@ async function edit_rokotsu(headlessMode,j,resArr,category){
 
     //露骨な表現内容を決定
     await page2.getByText('露骨な表現を含まない').nth(1).click();
-    await page2.waitForTimeout(wtimeout+3000);
+    await page2.waitForTimeout(wtimeout);
+    rokotsuna = await page2.locator(xpathh).nth(0).innerText()
+    //console.log('[OK] 修正済み[' + rokotsuna +']')
+
   }else if(rokotsuna == '露骨な表現を含む'){
     //露骨な表現🔽クリック
     await page2.locator('div:nth-child(5) > div:nth-child(2) > .css-b62m3t-container > .css-1v8asev-control > .css-1wy0on6').click();
@@ -252,12 +281,16 @@ async function edit_rokotsu(headlessMode,j,resArr,category){
     await page2.locator('body').press('ArrowUp');
     await page2.getByText('露骨な表現を含まない').nth(1).click();
     await page2.waitForTimeout(wtimeout);
+    rokotsuna = await page2.locator(xpathh).nth(0).innerText()
+    //console.log('[OK] 修正済み[' + rokotsuna +']')
   }else{
     seikou = 0;
     await write_log('[OK][' + standfm_listNo + '] 修正不要[' + archivename + '] ユーザー名[' + username + ']' , seikou);
-    console.log('[OK] 修正不要！露骨な表現を含まない');
+    rokotsuna = await page2.locator(xpathh).nth(0).innerText()
+    console.log('[OK] 修正不要！[' + rokotsuna +']');
     console.log('[OK] ['+ archivename + ']');
     console.log('[OK] アーカイブ順[' + standfm_listNo + ']');
+    rokotsuna = await page2.locator(xpathh).nth(0).innerText()
     return 0;
   } 
 
@@ -267,15 +300,15 @@ async function edit_rokotsu(headlessMode,j,resArr,category){
     //保存ボタン
     xpathh = '//*[@id="root"]/div/div/div/div/div[2]/div/div[2]/div/div/div/div[2]/div[10]/div/div'
     await page2.locator(xpathh).click();
-    await page2.waitForTimeout(wtimeout+1000);
+    await page2.waitForTimeout(wtimeout);
 
     //閉じる
     await page2.locator('div').filter({ hasText: /^閉じる$/ }).nth(2).click();
-    await page2.waitForTimeout(wtimeout+1)
+    await page2.waitForTimeout(wtimeout)
 
     seikou = 0;
-    await write_log('[OK][' + standfm_listNo + '] 露骨な表現を含まないに修正済み[' + archivename + '] ユーザー名[' + username + ']' , seikou);
-    console.log('[OK] 露骨な表現を含まないに修正済み');
+    await write_log('[OK][' + standfm_listNo + '] 修正済み露骨な表現を含まない[' + archivename + '] ユーザー名[' + username + ']' , seikou);
+    console.log('[OK] 修正済み[' + rokotsuna +']')
     console.log('[OK] ['+ archivename + ']');
     console.log('[OK] アーカイブ順[' + standfm_listNo + ']');
 
@@ -284,10 +317,10 @@ async function edit_rokotsu(headlessMode,j,resArr,category){
   } catch(e) {
     seikou = -1;
     await write_log('[NG][' + standfm_listNo + '] 露骨な表現を含まないに修正を失敗したアーカイブ名[' + archivename + '] ユーザー名[' + username + ']' , seikou);
-    console.log('失敗! 露骨な表現を修正できませんでした');
+    console.log('[NG] 修正不可能[' + rokotsuna +']');
+    console.log('[NG] 失敗! 露骨な表現を修正できませんでした');
+    console.log('[NG] ['+ archivename + ']');
     console.log('[NG] アーカイブ順[' + standfm_listNo + ']');
-    console.log('[NG] 露骨な表現を修正できなかった');
-    console.log('['+ archivename + ']');
     return -1;
   }  
 }
