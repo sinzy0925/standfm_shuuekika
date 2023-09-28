@@ -1,12 +1,12 @@
 const headlessMode = true;//false 画面あり　true 画面なし
-
 const { chromium } = require('playwright');
 const wtimeout =   200;
+
+
 
 //const readline = require('readline/promises');
 
 (async () => {
-
    
   let koumoku      = ''
   let standfm_id   = ''
@@ -138,7 +138,29 @@ const wtimeout =   200;
         await page2.close();  
         await context.close();
         await browser.close();
-        break;
+
+        //ほとんどの場合、30秒タイムアウトエラーなので、再度ログインして継続させる。
+        //それなら、毎回ログインすればどうなの？
+        //毎回ログインするとログイン時間が長い。
+        //成功する場合は処理が早いから、このままで良いことにする。20230928 by タロ
+
+        console.log('')
+        console.log('Start::::　standfm_login')  
+        resArr = await standfm_login(headlessMode,standfm_id,standfm_pass);
+        if(resArr != -1){
+            console.log('standfm_login = OK!')    
+            browser = resArr[0];//.push(browser,context,page2)
+            context = resArr[1];
+            page2   = resArr[2];
+            reslogin = 0;
+        }else{
+            console.log('standfm_login = NG!')
+            let ngword = 'standfmログイン失敗！ メルアド or パスワード に誤りがあります！'
+            console.log(ngword)
+            console.log(ngword)
+            await write_log(ngword ,seikou);
+        }
+        //break;
       }
       if(editend == j){
         await page2.close();  
@@ -157,6 +179,9 @@ const wtimeout =   200;
 ///////////////////////////////////////////////////
 
 async function edit_rokotsu(headlessMode,j,resArr,category){
+  let startTime = performance.now(); // 開始時間
+  let endTime = performance.now(); // 終了時間
+
   const standfm_listNo  = String(j);
   const browser = resArr[0];//.push(browser,context,page2)
   const context = resArr[1];
@@ -242,6 +267,7 @@ async function edit_rokotsu(headlessMode,j,resArr,category){
         break;
       }
       await page2.locator('body').press('ArrowDown');
+      await page2.waitForTimeout(50);
     }
     await page2.locator('body').press('Enter');
     category1 = await page2.locator(xpathh).nth(0).innerText()
@@ -297,6 +323,10 @@ async function edit_rokotsu(headlessMode,j,resArr,category){
 
 
   try{
+    endTime = performance.now(); // 終了時間
+    console.log('     経過時間 : ' + ((endTime - startTime)/1000).toFixed(1) + ' 秒'); // 何ミリ秒かかったかを表示する
+
+
     //保存ボタン
     xpathh = '//*[@id="root"]/div/div/div/div/div[2]/div/div[2]/div/div/div/div[2]/div[10]/div/div'
     await page2.locator(xpathh).click();
