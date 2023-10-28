@@ -1,10 +1,11 @@
 //npx playwright codegen
+//const express = require('express');
+//const app = express();
+
 const headlessMode = false;//false 画面あり　true 画面なし
-const testmode     = false;//false [する]楽曲申請・投稿設定更新　true [しない]楽曲申請・投稿設定更新
+const testmode     = true;//false [する]楽曲申請・投稿設定更新　true [しない]楽曲申請・投稿設定更新
 
 const { chromium } = require('playwright');
-const express = require('express');
-const app = express();
 const wtimeout =   500;
 
 
@@ -41,8 +42,24 @@ const readline = require('readline/promises');
   //console.log(koumoku);
   if(koumoku != ''){
     let koumokuArr = koumoku.split('\n');
-    //console.log(koumokuArr);	    
+    //console.log(koumokuArr);	
+    let ii = 0;    
     for(let i = 0 ; i < koumokuArr.length ; i++){
+      if(koumokuArr[0] != ''){
+        ii = 0;
+      }else{
+        ii = 1;
+      }
+      if(i == ii){
+        standfm_id = koumokuArr[i];
+      }
+      if(i == ii+1){
+        standfm_pass = koumokuArr[i];
+      }
+      if(i > ii+1){
+        gakkyoku += koumokuArr[i] + '\n';
+      }
+/*
       if(i == 0){
         standfm_id = koumokuArr[i];
       }
@@ -52,6 +69,7 @@ const readline = require('readline/promises');
       if(i > 1){
         gakkyoku += koumokuArr[i] + '\n';
       }
+*/
     }
     for(i = 0 ; i < 30 ; i++){
       console.log('')
@@ -478,6 +496,12 @@ async function gakkyokushinsei(headlessMode,testmode,gakuArr,j,res_gakkyoku,resA
   let startTime = performance.now(); // 開始時間
   let endTime = performance.now(); // 終了時間
 
+  let browser = resArr[0];//.push(browser,context,page2)
+  let context = resArr[1];
+  let page2   = resArr[2];
+
+  const timeout  = 40000;
+  page2.setDefaultTimeout(timeout);
 
   let gakkyokuArr = res_gakkyoku.split(',')
   const code      = gakkyokuArr[0]
@@ -486,12 +510,7 @@ async function gakkyokushinsei(headlessMode,testmode,gakuArr,j,res_gakkyoku,resA
   const sakushi   = gakkyokuArr[3]
   const sakukyoku = gakkyokuArr[4]
   const standfm_listNo  = String(gakuArr[j][1]);
-  let browser = resArr[0];//.push(browser,context,page2)
-  let context = resArr[1];
-  let page2   = resArr[2];
 
-  const timeout  = 10000;
-  page2.setDefaultTimeout(timeout);
 
 
   let JASRACorNextone = '-1'
@@ -601,7 +620,7 @@ async function gakkyokushinsei(headlessMode,testmode,gakuArr,j,res_gakkyoku,resA
       await page3.getByRole('heading', { name: 'stand.fm楽曲利用申請' }).click();
       await page3.waitForTimeout(wtimeout);
       seikou = 0;
-      await write_log('[OK] [' + standfm_listNo + '] コード[' + code + '] タイトル[' + title + '] アーカイブ['+ archivename + ']',seikou);
+      await write_log('[OK][' + standfm_listNo + '] コード[' + code + '] タイトル[' + title + '] アーカイブ['+ archivename + ']',seikou);
       console.log('[OK] [' + standfm_listNo + '] コード[' + code + '] タイトル[' + title + '] アーカイブ['+ archivename + ']');
       await page3.close();
     }catch (e){
@@ -638,23 +657,44 @@ async function gakkyokushinsei(headlessMode,testmode,gakuArr,j,res_gakkyoku,resA
     await page2.getByPlaceholder('放送の概要・ハッシュタグ・補足情報など').press('Meta+c');
     await page2.getByPlaceholder('放送の概要・ハッシュタグ・補足情報など').fill('APP楽曲申請済み [' + code + '🌸' +title + ']\n');
     await page2.getByPlaceholder('放送の概要・ハッシュタグ・補足情報など').press('Meta+v');
-    await page2.waitForTimeout(2000);
+    await page2.getByText('放送の説明').click();
+    await page2.locator('body').press('ArrowUp');
+    await page2.locator('body').press('ArrowUp');
+    await page2.locator('body').press('ArrowUp');
+    await page2.waitForTimeout(4000);
 
-    await page2.waitForTimeout(wtimeout);    
-    await page2.getByPlaceholder('タイトルを入力').click();
-    await page2.waitForTimeout(wtimeout);
-    await page2.getByPlaceholder('タイトルを入力').press('Meta+a');//Ctrl + a
-    await page2.getByPlaceholder('タイトルを入力').press('Meta+c');//Ctrl + c
-    await page2.getByPlaceholder('タイトルを入力').fill(' [楽曲申請済み]');
-    await page2.getByPlaceholder('タイトルを入力').press('ArrowUp');
-    await page2.getByPlaceholder('タイトルを入力').press('Meta+v');//Ctrl + V
-    //await page2.getByPlaceholder('公開範囲').click();
-    //await page2.locator('div').filter({ hasText: /^全体に公開$/ }).nth(2).click();
-    await page2.getByText('公開範囲必須').click();
-    //    await page2.locator('body').press('ArrowDown');
-    //  await page2.locator('body').press('ArrowDown');
-    //await page2.locator('body').press('ArrowDown');
-    await page2.waitForTimeout(2000);
+    let gakkyokushinseisumi = '[楽曲申請済み]'
+
+    xpathh = '//*[@id="root"]/div/div/div/div/div[2]/div/div[2]/div/div/div/div[2]/div[2]/div[1]/div[2]'
+    let titlename = (await page2.locator(xpathh).innerHTML()).split('value=\"')[1].split('\"')[0]
+    let titeled = titlename.indexOf(gakkyokushinseisumi);
+    //console.log('titlename,titeled')
+    //console.log([titlename,titeled])
+
+    //titeled = -1 : gakkyokushinseisumiなし　
+    //titlename.length <= 40 - gakkyokushinseisumi.length : タイトルは40文字以内なので、40から[楽曲申請済み]の文字数を引いたタイトルか確認する
+    if(titeled == -1 && titlename.length <= 40 - gakkyokushinseisumi.length ){
+      //console.log('titeled,titlename.length,40 - gakkyokushinseisumi.length')
+      //console.log([titeled,titlename.length,40 - gakkyokushinseisumi.length])
+      await page2.waitForTimeout(wtimeout);    
+      await page2.getByPlaceholder('タイトルを入力').click();
+      await page2.waitForTimeout(wtimeout);
+  
+      await page2.getByPlaceholder('タイトルを入力').press('Meta+a');//Ctrl + a
+      await page2.getByPlaceholder('タイトルを入力').press('Meta+c');//Ctrl + c
+      await page2.getByPlaceholder('タイトルを入力').fill(gakkyokushinseisumi);
+      await page2.getByPlaceholder('タイトルを入力').press('ArrowUp');
+      await page2.getByPlaceholder('タイトルを入力').press('Meta+v');//Ctrl + V
+      //await page2.getByText('公開範囲必須').click();
+      //await page2.locator('body').press('ArrowDown');
+      //await page2.locator('body').press('ArrowDown');
+      await page2.waitForTimeout(4000);  
+      console.log('     アーカイブのタイトル変更します！！！ ' + gakkyokushinseisumi)
+      //console.log(titlename)
+    }else{
+      console.log('     アーカイブのタイトル変更なし！ 既に  ' + gakkyokushinseisumi)
+      //console.log(titlename)
+    }
 
 
 /////////////////////////////  
@@ -700,7 +740,9 @@ async function gakkyokushinsei(headlessMode,testmode,gakuArr,j,res_gakkyoku,resA
     await page2.waitForTimeout(wtimeout);
     rokotsuna = await page2.locator(xpathh).nth(0).innerText()
     //console.log('[OK] 修正済み[' + rokotsuna +']')
-
+    console.log('[OK] 修正済み[' + rokotsuna +']')
+    endTime = performance.now(); // 終了時間
+    console.log('     経過時間 : ' + ((endTime - startTime)/1000).toFixed(1) + ' 秒'); // 何ミリ秒かかったかを表示する
   }else if(rokotsuna == '露骨な表現を含む'){
     //露骨な表現🔽クリック
     await page2.locator('div:nth-child(5) > div:nth-child(2) > .css-b62m3t-container > .css-1v8asev-control > .css-1wy0on6').click();
@@ -712,8 +754,8 @@ async function gakkyokushinsei(headlessMode,testmode,gakuArr,j,res_gakkyoku,resA
     await page2.waitForTimeout(wtimeout);
     rokotsuna = await page2.locator(xpathh).nth(0).innerText()
     endTime = performance.now(); // 終了時間
+    console.log('[OK] 修正済み[' + rokotsuna +']')
     console.log('     経過時間 : ' + ((endTime - startTime)/1000).toFixed(1) + ' 秒'); // 何ミリ秒かかったかを表示する
-      //console.log('[OK] 修正済み[' + rokotsuna +']')
   }else{
     seikou = 0;
     await write_log('[OK][' + standfm_listNo + '] 修正不要[' + archivename + '] ユーザー名[' + username + ']' , seikou);
@@ -743,7 +785,7 @@ async function gakkyokushinsei(headlessMode,testmode,gakuArr,j,res_gakkyoku,resA
       //閉じる
       await page2.locator('div').filter({ hasText: /^閉じる$/ }).nth(2).click();
       await page2.waitForTimeout(wtimeout)
-      await write_log('[OK] [' + standfm_listNo + '] 放送の概要へ記載済み コード[' + code + '] タイトル[' + title + '] アーカイブ['+ archivename + ']',seikou);
+      await write_log('[OK][' + standfm_listNo + '] 放送の概要へ記載済み コード[' + code + '] タイトル[' + title + '] アーカイブ['+ archivename + ']',seikou);
       console.log('[OK] [' + standfm_listNo + '] 放送の概要へ記載済み => APP楽曲申請済み [' + code + '] アーカイブ['+ archivename + ']');
     }
 
@@ -862,12 +904,14 @@ async function get_ymd(){
     return yymmdd
 }
 
+/*
 app.get('/', (req, res) => {
   res.send(text1);
 
   console.log('log : app.get() ' + text1);
 
 });
+*/
 
 async function get_1line(arg1){
   const fs = require("fs");
