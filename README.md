@@ -1,3 +1,5 @@
 # standfm_shuuekika
-stand.fmの収益化プログラムで必須となる、露骨な表現を含まないに変更するアプリ
-Google Cloudアプリで実行してもらう感じです。
+楽曲申請アプリの説明
+ユーザープロファイルのフォルダで、standfm_shuuekikaフォルダを展開します。
+standfm_shuuekikaフォルダで、playwriteをインストールします。
+
