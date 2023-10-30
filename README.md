@@ -2,4 +2,5 @@
 楽曲申請アプリの説明
 ユーザープロファイルのフォルダで、standfm_shuuekikaフォルダを展開します。
 standfm_shuuekikaフォルダで、playwriteをインストールします。
-
+start.batのremの注意事項を確認して、必要な項目を変更していきます。
+start.batが上書き出来たら、start.batをダブルクリックして実行しましょう。
